@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Gộp PDF Online</title>
+</head>
+<body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+  <h1>📎 Gộp File PDF</h1>
+  <p>Chọn các file PDF để gộp lại thành một file duy nhất:</p>
+  <input type="file" id="fileInput" multiple accept=".pdf"><br><br>
+  <button onclick="mergePDFs()" style="padding: 10px 20px; font-size: 16px;">Gộp và Tải Xuống</button>
+
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script>
+    async function mergePDFs() {
+      const input = document.getElementById('fileInput');
+      const files = input.files;
+
+      if (files.length < 2) {
+        alert("Vui lòng chọn ít nhất 2 file PDF để gộp.");
+        return;
+      }
+
+      const mergedPdf = await PDFLib.PDFDocument.create();
+
+      for (const file of files) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
+        const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+        copiedPages.forEach(page => mergedPdf.addPage(page));
+      }
+
+      const mergedPdfFile = await mergedPdf.save();
+      const blob = new Blob([mergedPdfFile], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Gop_File_PDF.pdf";
+      a.click();
+    }
+  </script>
+</body>
+</html>
