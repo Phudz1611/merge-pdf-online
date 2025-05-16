@@ -3,27 +3,96 @@
 <head>
   <meta charset="UTF-8">
   <title>Gộp PDF Online</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 40px;
+    }
+    #fileList {
+      max-width: 500px;
+      margin: 0 auto;
+      text-align: left;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #f9f9f9;
+    }
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .file-item:last-child {
+      border-bottom: none;
+    }
+    .remove-btn {
+      background: red;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
 </head>
-<body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+<body>
   <h1>📎 Gộp File PDF</h1>
   <p>Chọn các file PDF để gộp lại thành một file duy nhất:</p>
   <input type="file" id="fileInput" multiple accept=".pdf"><br><br>
+
+  <div id="fileList"></div><br>
+
   <button onclick="mergePDFs()" style="padding: 10px 20px; font-size: 16px;">Gộp và Tải Xuống</button>
 
   <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
   <script>
-    async function mergePDFs() {
-      const input = document.getElementById('fileInput');
-      const files = input.files;
+    let selectedFiles = [];
 
-      if (files.length < 2) {
+    const fileInput = document.getElementById('fileInput');
+    const fileListDiv = document.getElementById('fileList');
+
+    fileInput.addEventListener('change', () => {
+      for (let file of fileInput.files) {
+        selectedFiles.push(file);
+      }
+      updateFileList();
+    });
+
+    function updateFileList() {
+      fileListDiv.innerHTML = '';
+      if (selectedFiles.length === 0) {
+        fileListDiv.innerHTML = '<i>Chưa có file nào được chọn.</i>';
+        return;
+      }
+
+      selectedFiles.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'file-item';
+        div.innerHTML = `
+          <span>${file.name}</span>
+          <button class="remove-btn" onclick="removeFile(${index})">Xóa</button>
+        `;
+        fileListDiv.appendChild(div);
+      });
+    }
+
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      updateFileList();
+    }
+
+    async function mergePDFs() {
+      if (selectedFiles.length < 2) {
         alert("Vui lòng chọn ít nhất 2 file PDF để gộp.");
         return;
       }
 
       const mergedPdf = await PDFLib.PDFDocument.create();
 
-      for (const file of files) {
+      for (const file of selectedFiles) {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
         const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
@@ -38,6 +107,8 @@
       a.download = "Gop_File_PDF.pdf";
       a.click();
     }
+
+    updateFileList(); // hiển thị danh sách ngay từ đầu (trống)
   </script>
 </body>
 </html>
